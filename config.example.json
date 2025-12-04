@@ -1,0 +1,101 @@
+{
+  "currency": "RUB",
+  "tax": {
+    "profit_tax_rate": 0.22
+  },
+  "jewelry": {
+    "channels": [
+      {
+        "name": "boutique",
+        "units": 30,
+        "avg_price": 120000,
+        "unit_cost": 40000,
+        "discount_rate": 0.05,
+        "return_rate": 0.02,
+        "payment_fee_rate": 0.015,
+        "channel_fee_rate": 0.0,
+        "variable_ops_cost": 2000
+      },
+      {
+        "name": "ecommerce",
+        "units": 45,
+        "avg_price": 90000,
+        "unit_cost": 35000,
+        "discount_rate": 0.1,
+        "return_rate": 0.03,
+        "payment_fee_rate": 0.025,
+        "channel_fee_rate": 0.1,
+        "variable_ops_cost": 1500
+      }
+    ],
+    "overheads": {
+      "rent": 400000,
+      "payroll": 350000,
+      "marketing": 300000,
+      "insurance": 50000,
+      "other_fixed": 75000
+    }
+  },
+  "yoga": {
+    "capacity": 30,
+    "classes": {
+      "slots_per_day": 6,
+      "days_per_week": 6,
+      "weeks_per_month": 4.3,
+      "fill_rate": 0.65
+    },
+    "pricing": {
+      "single_class_price": 1500,
+      "discount_rate": 0.05,
+      "corporate_day_rate": 120000,
+      "corporate_variable_cost_rate": 0.05
+    },
+    "payment_fee_rate": 0.02,
+    "trainer_payout_rate": 0.5,
+    "variable_cost_per_attendee": 150,
+    "corporate": {
+      "days_per_month": 4,
+      "public_slots_replaced": true
+    },
+    "overheads": {
+      "rent": 250000,
+      "payroll": 200000,
+      "marketing": 150000,
+      "utilities": 60000,
+      "cleaning": 40000,
+      "other_fixed": 50000
+    }
+  },
+  "retail": {
+    "categories": [
+      {
+        "name": "apparel",
+        "units": 200,
+        "avg_price": 6000,
+        "unit_cost": 2500,
+        "discount_rate": 0.05,
+        "return_rate": 0.05,
+        "payment_fee_rate": 0.015,
+        "channel_fee_rate": 0.0,
+        "variable_ops_cost": 200
+      },
+      {
+        "name": "oils_and_accessories",
+        "units": 280,
+        "avg_price": 2500,
+        "unit_cost": 900,
+        "discount_rate": 0.03,
+        "return_rate": 0.04,
+        "payment_fee_rate": 0.015,
+        "channel_fee_rate": 0.0,
+        "variable_ops_cost": 120
+      }
+    ],
+    "overheads": {
+      "rent": 150000,
+      "payroll": 150000,
+      "marketing": 50000,
+      "other_fixed": 40000
+    }
+  }
+}
