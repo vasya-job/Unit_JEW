@@ -22,14 +22,26 @@ const SHEET_HISTORY = '📜 История';
 
 /** Инструменты: сырьё + ключевые химические компании */
 const INSTRUMENTS = [
+  // ── Сырьё ──────────────────────────────────────────────────────────────
   { key: 'crude_oil',   ticker: 'CL=F',  name: 'Нефть WTI',        unit: '$/барр.',  weight: 0.25, cat: 'Нефтехимия' },
   { key: 'natural_gas', ticker: 'NG=F',  name: 'Природный газ',    unit: '$/MMBtu',  weight: 0.10, cat: 'Нефтехимия' },
   { key: 'gasoline',    ticker: 'RB=F',  name: 'Бензин RBOB',      unit: '$/гал.',   weight: 0.08, cat: 'Нефтехимия' },
   { key: 'corn',        ticker: 'ZC=F',  name: 'Кукуруза',         unit: '¢/бушель', weight: 0.07, cat: 'Биосырьё'   },
+  // ── Западные химические компании ────────────────────────────────────────
   { key: 'lyondell',    ticker: 'LYB',   name: 'LyondellBasell',   unit: '$',        weight: 0.13, cat: 'Химия'      },
   { key: 'eastman',     ticker: 'EMN',   name: 'Eastman Chemical',  unit: '$',        weight: 0.12, cat: 'Химия'      },
   { key: 'dow',         ticker: 'DOW',   name: 'Dow Inc.',          unit: '$',        weight: 0.10, cat: 'Химия'      },
   { key: 'hb_fuller',   ticker: 'FUL',   name: 'H.B. Fuller',       unit: '$',        weight: 0.15, cat: 'Отрасль'   },
+  // ── Китайские производители: полиолы и изоцианаты (цены в CNY ¥) ──────
+  // 万华化学 — крупнейший в мире производитель MDI (метилендифенилдиизоцианат),
+  // также выпускает TDI, полиольные системы. Шанхайская биржа.
+  { key: 'wanhua',      ticker: '600309.SS', name: 'Wanhua Chemical 万华化学', unit: '¥', weight: 0.10, cat: 'CN — MDI/ТДИ' },
+  // 卫星化学 — крупный производитель пропиленоксида (PO) и полиэфирполиолов
+  // на его основе; ориентирован на рынок ПУ-клеёв и герметиков. Шэньчжэнь.
+  { key: 'satellite',   ticker: '002648.SZ', name: 'Satellite Chem 卫星化学',  unit: '¥', weight: 0.07, cat: 'CN — Полиол' },
+  // 红宝丽 — специализируется исключительно на полиэфирполиолах для
+  // жёстких и гибких пенополиуретанов; индикатор спроса на полиолы. Шэньчжэнь.
+  { key: 'hongbaoli',   ticker: '002165.SZ', name: 'Hongbaoli 红宝丽',         unit: '¥', weight: 0.05, cat: 'CN — Полиол' },
 ];
 
 /** Валютные пары */
@@ -38,6 +50,8 @@ const FOREX_PAIRS = [
     desc: 'Ослабление рубля повышает себестоимость импортного сырья' },
   { key: 'eur_usd', ticker: 'EURUSD=X', name: 'EUR / USD',
     desc: 'Влияет на стоимость европейских химикатов (BASF, Evonik, Arkema)' },
+  { key: 'cny_rub', ticker: 'CNYRUB=X', name: 'CNY / RUB',
+    desc: 'Юань к рублю: ключевой курс для MDI, полиолов и TDI из Китая' },
 ];
 
 // Цвета (тёмная тема, как в веб-дашборде)
@@ -200,9 +214,15 @@ function _computeCrisis(instrData, forexData) {
 
   let base = totalW > 0 ? weighted / totalW : 50;
   let fxAdj = 0;
+  // USD/RUB: ослабление рубля к доллару (западное сырьё / BASF и др.)
   if (forexData.usd_rub) {
-    fxAdj = Math.min(Math.max(forexData.usd_rub.ch1y, 0), 30) * 0.5;
+    fxAdj += Math.min(Math.max(forexData.usd_rub.ch1y, 0), 30) * 0.40;
   }
+  // CNY/RUB: ослабление рубля к юаню (MDI, полиолы из Китая)
+  if (forexData.cny_rub) {
+    fxAdj += Math.min(Math.max(forexData.cny_rub.ch1y, 0), 30) * 0.25;
+  }
+  fxAdj = Math.min(fxAdj, 15); // суммарный кэп +15 баллов
   const score = Math.min(base + fxAdj, 100);
 
   let level, color, interp;
@@ -409,8 +429,12 @@ function _updateDashboard(ss, instrData, forexData, crisis) {
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   // Forex
   sh.getRange(row, 7, 1, 2).merge()
-    .setValue(crisis.fxAdj > 0 ? '+' + crisis.fxAdj.toFixed(1) + ' б.\nUSD/RUB: +' +
-      (forexData.usd_rub ? forexData.usd_rub.ch1y.toFixed(1) + '%' : '—') : 'Нет поправки')
+    .setValue(crisis.fxAdj > 0
+      ? '+' + crisis.fxAdj.toFixed(1) + ' б.  USD/RUB: ' +
+        (forexData.usd_rub ? (forexData.usd_rub.ch1y >= 0 ? '+' : '') + forexData.usd_rub.ch1y.toFixed(1) + '%' : '—') +
+        '  CNY/RUB: ' +
+        (forexData.cny_rub ? (forexData.cny_rub.ch1y >= 0 ? '+' : '') + forexData.cny_rub.ch1y.toFixed(1) + '%' : '—')
+      : 'Нет поправки')
     .setBackground(C.card).setFontColor(crisis.fxAdj > 0 ? C.yellow : C.green)
     .setFontSize(13).setFontWeight('bold')
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
@@ -530,7 +554,7 @@ function _updateDashboard(ss, instrData, forexData, crisis) {
   // Forex строка
   if (crisis.fxAdj > 0) {
     sh.setRowHeight(row, 22);
-    sh.getRange(row, 2).setValue('Поправка USD/RUB').setBackground(C.card2).setFontColor(C.text).setFontSize(10);
+    sh.getRange(row, 2).setValue('Поправка курса (USD/RUB + CNY/RUB)').setBackground(C.card2).setFontColor(C.text).setFontSize(10);
     sh.getRange(row, 3).setValue('+' + crisis.fxAdj.toFixed(1) + ' б.').setBackground(C.card2).setFontColor(C.yellow).setFontWeight('bold');
     sh.getRange(row, 4, 1, 4).merge()
       .setValue(_bar(crisis.fxAdj * 3, 20) + '  (добавлено к итоговому баллу)')
@@ -542,9 +566,10 @@ function _updateDashboard(ss, instrData, forexData, crisis) {
 
   // ── Методология ──
   const meth = 'МЕТОДОЛОГИЯ: Стресс = 50% × позиция в 52-нед. диапазоне + 50% × превышение годовой средней (макс. +50% → 100 б.). ' +
-    'Поправка USD/RUB: ослабление рубля добавляет до +15 баллов. Зоны: 0–29 = НИЗКИЙ ◆ 30–59 = СРЕДНИЙ ◆ 60–100 = ВЫСОКИЙ. ' +
-    'Источник данных: Yahoo Finance (yfinance API). Компании: H.B. Fuller (вес 15%), LyondellBasell (13%), Eastman Chemical (12%), ' +
-    'Dow Inc. (10%). Сырьё: Нефть WTI (25%), газ (10%), RBOB (8%), кукуруза (7%).';
+    'Поправка курса: ослабление рубля к USD (×0.40) и CNY (×0.25), суммарный кэп +15 баллов. Зоны: 0–29 = НИЗКИЙ ◆ 30–59 = СРЕДНИЙ ◆ 60–100 = ВЫСОКИЙ. ' +
+    'Источник данных: Yahoo Finance. Компании: H.B. Fuller (15%), LyondellBasell (13%), Eastman Chemical (12%), Dow Inc. (10%), ' +
+    'Wanhua Chemical 万华化学 — MDI/TDI (10%), Satellite Chem 卫星化学 — полиолы (7%), Hongbaoli 红宝丽 — полиолы (5%). ' +
+    'Сырьё: Нефть WTI (25%), газ (10%), RBOB (8%), кукуруза (7%). Цены китайских акций в CNY (¥).';
   sh.setRowHeight(row, 50);
   sh.getRange(row, 2, 1, 11).merge()
     .setValue(meth).setBackground(C.bg).setFontColor('#475569')
