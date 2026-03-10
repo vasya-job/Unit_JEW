@@ -1,0 +1,14 @@
+{
+  "last_updated": "10.03.2026 07:52",
+  "commodities": {},
+  "forex": {},
+  "crisis": {
+    "score": 50.0,
+    "level": "medium",
+    "level_ru": "СРЕДНИЙ",
+    "color": "#f59e0b",
+    "interpretation": "Умеренное ценовое давление на рынке сырья. Возможен рост цен на клеи в горизонте 1–3 месяцев.",
+    "components": [],
+    "fx_adj": 0.0
+  }
+}
